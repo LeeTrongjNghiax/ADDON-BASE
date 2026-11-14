@@ -1,0 +1,10 @@
+pack.name=§6我的附加包项目源码 RP
+pack.description=我的附加包项目源码 RP
+
+tile.your_namespace:custom_block.name=自定义方块~LINEBREAK~§9海洋怪物
+
+item.your_namespace:custom_sword=自定义剑~LINEBREAK~§9海洋怪物
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=生成自定义实体
+
+entity.your_namespace:custom_entity.name=自定义实体

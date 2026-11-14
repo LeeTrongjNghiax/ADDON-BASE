@@ -1,0 +1,10 @@
+pack.name=§6Sorgente del mio progetto add-on RP
+pack.description=Sorgente del mio progetto add-on RP
+
+tile.your_namespace:custom_block.name=Blocco personalizzato~LINEBREAK~§9Mostro dell'oceano
+
+item.your_namespace:custom_sword=Spada personalizzata~LINEBREAK~§9Mostro dell'oceano
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Evoca entità personalizzata
+
+entity.your_namespace:custom_entity.name=Entità personalizzata

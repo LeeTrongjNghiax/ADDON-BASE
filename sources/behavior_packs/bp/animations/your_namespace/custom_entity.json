@@ -1,0 +1,16 @@
+{
+	"format_version": "1.20.0",
+	"animations": {
+		"animation.custom_entity.custom_animation": {
+			"loop": true,
+			"animation_length": 0.5,
+			"timeline": {
+				"0.01": [
+					"/particle keystone:blaster_pistol2_impact ~~~",
+					"@s despawn",
+					"/summon keystone:hit_pistol"
+				]
+			}
+		}
+	}
+}

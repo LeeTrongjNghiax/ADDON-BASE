@@ -1,0 +1,10 @@
+pack.name=§6Kilde for mitt tilleggsprosjekt RP
+pack.description=Kilde for mitt tilleggsprosjekt RP
+
+tile.your_namespace:custom_block.name=Egendefinert blokk~LINEBREAK~§9Havmonster
+
+item.your_namespace:custom_sword=Egendefinert sverd~LINEBREAK~§9Havmonster
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Generer egendefinert vesen
+
+entity.your_namespace:custom_entity.name=Egendefinert vesen

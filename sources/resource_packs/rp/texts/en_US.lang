@@ -1,0 +1,10 @@
+pack.name=§6My Addon Project Source RP
+pack.description=My Addon Project Source RP
+
+tile.your_namespace:custom_block.name=Custom Block~LINEBREAK~§9Ocean Monster
+
+item.your_namespace:custom_sword=Custom Sword~LINEBREAK~§9Ocean Monster
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Spawn Custom Entity
+
+entity.your_namespace:custom_entity.name=Custom Entity

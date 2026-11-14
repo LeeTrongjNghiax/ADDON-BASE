@@ -1,0 +1,10 @@
+pack.name=§6Bron van mijn add-onproject RP
+pack.description=Bron van mijn add-onproject RP
+
+tile.your_namespace:custom_block.name=Aangepast blok~LINEBREAK~§9Oceaanmonster
+
+item.your_namespace:custom_sword=Aangepast zwaard~LINEBREAK~§9Oceaanmonster
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Aangepaste entiteit spawnen
+
+entity.your_namespace:custom_entity.name=Aangepaste entiteit

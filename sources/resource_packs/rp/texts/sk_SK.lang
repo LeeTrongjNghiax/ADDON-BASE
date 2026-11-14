@@ -1,0 +1,10 @@
+pack.name=§6Zdroj projektu môjho doplnku RP
+pack.description=Zdroj projektu môjho doplnku RP
+
+tile.your_namespace:custom_block.name=Vlastný blok~LINEBREAK~§9Oceánska príšera
+
+item.your_namespace:custom_sword=Vlastný meč~LINEBREAK~§9Oceánska príšera
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Vyvolať vlastnú bytosť
+
+entity.your_namespace:custom_entity.name=Vlastná bytosť

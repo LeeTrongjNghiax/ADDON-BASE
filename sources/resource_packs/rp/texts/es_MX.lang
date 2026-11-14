@@ -1,0 +1,10 @@
+pack.name=§6Código fuente de mi proyecto de complemento RP
+pack.description=Código fuente de mi proyecto de complemento RP
+
+tile.your_namespace:custom_block.name=Bloque personalizado~LINEBREAK~§9Monstruo marino
+
+item.your_namespace:custom_sword=Espada personalizada~LINEBREAK~§9Monstruo marino
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Generar entidad personalizada
+
+entity.your_namespace:custom_entity.name=Entidad personalizada

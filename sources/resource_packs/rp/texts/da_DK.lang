@@ -1,0 +1,10 @@
+pack.name=§6Kilde til mit addon-projekt RP
+pack.description=Kilde til mit addon-projekt RP
+
+tile.your_namespace:custom_block.name=Brugerdefineret blok~LINEBREAK~§9Havmonster
+
+item.your_namespace:custom_sword=Brugerdefineret sværd~LINEBREAK~§9Havmonster
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Spawn brugerdefineret væsen
+
+entity.your_namespace:custom_entity.name=Brugerdefineret væsen

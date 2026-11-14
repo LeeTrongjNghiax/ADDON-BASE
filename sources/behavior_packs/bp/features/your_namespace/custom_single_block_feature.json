@@ -1,0 +1,11 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:single_block_feature": {
+    "description": { "identifier": "your_namespace:custom_single_block_feature" },
+    "places_block": "your_namespace:custom_block",
+    "enforce_placement_rules": true,
+    "enforce_survivability_rules": true,
+    "may_replace": ["minecraft:air"],
+    "may_attach_to": { "top": "minecraft:air", "sides": ["minecraft:air"] }
+  }
+}

@@ -1,0 +1,10 @@
+pack.name=§6Addon-projektem forrása RP
+pack.description=Addon-projektem forrása RP
+
+tile.your_namespace:custom_block.name=Egyedi blokk~LINEBREAK~§9Óceáni szörny
+
+item.your_namespace:custom_sword=Egyedi kard~LINEBREAK~§9Óceáni szörny
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Egyedi lény idézése
+
+entity.your_namespace:custom_entity.name=Egyedi lény

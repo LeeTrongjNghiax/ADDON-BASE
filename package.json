@@ -1,0 +1,46 @@
+{
+  "name": "test-addon",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "batchs\\dev.bat",
+    "output": "batchs\\output.bat",
+    "build": "batchs\\build.bat",
+    "zip": "batchs\\zip.bat",
+    "translate": "batchs\\translate-lang.bat",
+    "bundle": "node ./sources/behavior_packs/bp/build.js",
+    "watch": "nodemon --watch sources/behavior_packs/bp --watch sources/resource_packs/rp --exec \"npm run dev\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@minecraft/common": "^1.3.0",
+    "@minecraft/debug-utilities": "^1.0.0-beta.1.20.70-preview.20",
+    "@minecraft/gameplay-utilities": "^1.3.0",
+    "@minecraft/math": "^2.4.0",
+    "@minecraft/server": "^2.8.0",
+    "@minecraft/server-admin": "^1.0.0-beta.11940b24",
+    "@minecraft/server-editor": "^0.1.0-beta.1.20.20-preview.20",
+    "@minecraft/server-gametest": "^1.0.0-beta.1.21.60-preview.24",
+    "@minecraft/server-net": "^1.0.0-beta.11940b24",
+    "@minecraft/server-ui": "^2.1.0",
+    "@minecraft/vanilla-data": "^1.26.31",
+    "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
+    "concurrently": "^10.0.3",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "jiti": "^2.7.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1"
+  }
+}

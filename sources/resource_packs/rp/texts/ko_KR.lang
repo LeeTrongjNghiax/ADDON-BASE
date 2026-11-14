@@ -1,0 +1,10 @@
+pack.name=§6내 애드온 프로젝트 소스 RP
+pack.description=내 애드온 프로젝트 소스 RP
+
+tile.your_namespace:custom_block.name=커스텀 블록~LINEBREAK~§9바다 몬스터
+
+item.your_namespace:custom_sword=커스텀 검~LINEBREAK~§9바다 몬스터
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=커스텀 엔티티 소환
+
+entity.your_namespace:custom_entity.name=커스텀 엔티티

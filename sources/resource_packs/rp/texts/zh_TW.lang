@@ -1,0 +1,10 @@
+pack.name=§6我的附加元件專案原始碼 RP
+pack.description=我的附加元件專案原始碼 RP
+
+tile.your_namespace:custom_block.name=自訂方塊~LINEBREAK~§9海洋怪物
+
+item.your_namespace:custom_sword=自訂劍~LINEBREAK~§9海洋怪物
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=生成自訂實體
+
+entity.your_namespace:custom_entity.name=自訂實體

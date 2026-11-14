@@ -1,0 +1,10 @@
+pack.name=§6Джерело мого проєкту аддону RP
+pack.description=Джерело мого проєкту аддону RP
+
+tile.your_namespace:custom_block.name=Власний блок~LINEBREAK~§9Океанський монстр
+
+item.your_namespace:custom_sword=Власний меч~LINEBREAK~§9Океанський монстр
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Породити власну істоту
+
+entity.your_namespace:custom_entity.name=Власна істота

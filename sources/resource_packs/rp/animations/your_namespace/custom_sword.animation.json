@@ -1,0 +1,13 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.custom_sword.1": {
+      "loop": true,
+      "bones": { "root": { "rotation": [27.5, 0, -142.49], "position": [3, 19, 11] } }
+    },
+    "animation.custom_sword.3": {
+      "loop": true,
+      "bones": { "root": { "rotation": [90, 0, 0], "position": [0, 19, 1] } }
+    }
+  }
+}

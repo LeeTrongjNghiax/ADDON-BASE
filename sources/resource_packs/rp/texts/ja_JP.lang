@@ -1,0 +1,10 @@
+pack.name=§6アドオンプロジェクトのソース RP
+pack.description=アドオンプロジェクトのソース RP
+
+tile.your_namespace:custom_block.name=カスタムブロック~LINEBREAK~§9海洋モンスター
+
+item.your_namespace:custom_sword=カスタムソード~LINEBREAK~§9海洋モンスター
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=カスタムエンティティをスポーン
+
+entity.your_namespace:custom_entity.name=カスタムエンティティ

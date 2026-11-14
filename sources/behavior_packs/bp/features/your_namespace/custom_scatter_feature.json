@@ -1,0 +1,13 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:scatter_feature": {
+    "description": { "identifier": "your_namespace:custom_scatter_feature" },
+    "places_feature": "your_namespace:custom_single_block_feature",
+    "iterations": 12,
+    "scatter_chance": { "numerator": 2, "denominator": 3 },
+    "project_input_to_floor": true,
+    "x": { "distribution": "jittered_grid", "extent": [0, 15], "step_size": 10, "grid_offset": 4 },
+    "z": { "distribution": "jittered_grid", "extent": [0, 15], "step_size": 10, "grid_offset": 4 },
+    "y": 0
+  }
+}

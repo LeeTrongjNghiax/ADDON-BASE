@@ -1,0 +1,10 @@
+pack.name=§6Исходный код проекта аддона RP
+pack.description=Исходный код проекта аддона RP
+
+tile.your_namespace:custom_block.name=Пользовательский блок~LINEBREAK~§9Океанский монстр
+
+item.your_namespace:custom_sword=Пользовательский меч~LINEBREAK~§9Океанский монстр
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Призвать пользовательскую сущность
+
+entity.your_namespace:custom_entity.name=Пользовательская сущность

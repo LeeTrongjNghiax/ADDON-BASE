@@ -1,0 +1,10 @@
+pack.name=§6Sumber Proyek Addon Saya RP
+pack.description=Sumber Proyek Addon Saya RP
+
+tile.your_namespace:custom_block.name=Blok Kustom~LINEBREAK~§9Monster Laut
+
+item.your_namespace:custom_sword=Pedang Kustom~LINEBREAK~§9Monster Laut
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Munculkan Entitas Kustom
+
+entity.your_namespace:custom_entity.name=Entitas Kustom

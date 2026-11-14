@@ -1,0 +1,10 @@
+pack.name=§6Lisäosaprojektini lähde RP
+pack.description=Lisäosaprojektini lähde RP
+
+tile.your_namespace:custom_block.name=Mukautettu kuutio~LINEBREAK~§9Merihirviö
+
+item.your_namespace:custom_sword=Mukautettu miekka~LINEBREAK~§9Merihirviö
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Luo mukautettu olento
+
+entity.your_namespace:custom_entity.name=Mukautettu olento

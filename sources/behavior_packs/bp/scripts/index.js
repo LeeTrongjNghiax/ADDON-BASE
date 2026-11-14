@@ -1,0 +1,1 @@
+import{world as r}from"@minecraft/server";r.afterEvents.entityHitEntity.subscribe(({damagingEntity:t,hitEntity:e})=>{r.sendMessage(`${t.typeId} hit ${e.typeId}`)});import{world as i}from"@minecraft/server";i.beforeEvents.playerInteractWithBlock.subscribe(({block:t,itemStack:e,player:n})=>{i.sendMessage(`${n.name} interacted with ${t.typeId} using ${e?.typeId}`)});

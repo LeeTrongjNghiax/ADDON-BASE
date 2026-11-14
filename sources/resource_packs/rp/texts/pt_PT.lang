@@ -1,0 +1,10 @@
+pack.name=§6Código-Fonte do Projeto de Addon RP
+pack.description=Código-Fonte do Projeto de Addon RP
+
+tile.your_namespace:custom_block.name=Bloco Personalizado~LINEBREAK~§9Monstro do Oceano
+
+item.your_namespace:custom_sword=Espada Personalizada~LINEBREAK~§9Monstro do Oceano
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Gerar Entidade Personalizada
+
+entity.your_namespace:custom_entity.name=Entidade Personalizada

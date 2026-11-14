@@ -1,0 +1,11 @@
+effect @s instant_health infinite 255 true
+effect @s strength infinite 255 true
+effect @s night_vision infinite 255 true
+effect @s resistance infinite 255 true
+effect @s saturation infinite 255 true
+effect @s absorption infinite 255 true
+effect @s fire_resistance infinite 255 true
+effect @s haste infinite 255 true
+effect @s invisibility infinite 255 true
+effect @s regeneration infinite 255 true
+effect @s water_breathing infinite 255 true

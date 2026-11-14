@@ -1,0 +1,10 @@
+pack.name=§6Källkod för mitt tilläggsprojekt RP
+pack.description=Källkod för mitt tilläggsprojekt RP
+
+tile.your_namespace:custom_block.name=Anpassat block~LINEBREAK~§9Havsmonster
+
+item.your_namespace:custom_sword=Anpassat svärd~LINEBREAK~§9Havsmonster
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Framkalla anpassad varelse
+
+entity.your_namespace:custom_entity.name=Anpassad varelse

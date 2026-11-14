@@ -1,0 +1,10 @@
+pack.name=§6Quellcode meines Add-on-Projekts RP
+pack.description=Quellcode meines Add-on-Projekts RP
+
+tile.your_namespace:custom_block.name=Benutzerdefinierter Block~LINEBREAK~§9Ozeanmonster
+
+item.your_namespace:custom_sword=Benutzerdefiniertes Schwert~LINEBREAK~§9Ozeanmonster
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Benutzerdefinierte Entität spawnen
+
+entity.your_namespace:custom_entity.name=Benutzerdefinierte Entität

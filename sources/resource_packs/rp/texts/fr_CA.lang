@@ -1,0 +1,10 @@
+pack.name=§6Source de mon projet d'addon RP
+pack.description=Source de mon projet d'addon RP
+
+tile.your_namespace:custom_block.name=Bloc personnalisé~LINEBREAK~§9Monstre des océans
+
+item.your_namespace:custom_sword=Épée personnalisée~LINEBREAK~§9Monstre des océans
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Faire apparaître une entité personnalisée
+
+entity.your_namespace:custom_entity.name=Entité personnalisée

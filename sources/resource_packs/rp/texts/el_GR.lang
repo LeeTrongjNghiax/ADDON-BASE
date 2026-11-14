@@ -1,0 +1,10 @@
+pack.name=§6Πηγή Έργου Addon μου RP
+pack.description=Πηγή Έργου Addon μου RP
+
+tile.your_namespace:custom_block.name=Προσαρμοσμένο Μπλοκ~LINEBREAK~§9Τέρας του Ωκεανού
+
+item.your_namespace:custom_sword=Προσαρμοσμένο Σπαθί~LINEBREAK~§9Τέρας του Ωκεανού
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Δημιουργία Προσαρμοσμένης Οντότητας
+
+entity.your_namespace:custom_entity.name=Προσαρμοσμένη Οντότητα

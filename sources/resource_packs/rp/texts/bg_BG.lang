@@ -1,0 +1,10 @@
+pack.name=§6Изходен код на моя проект за добавка RP
+pack.description=Изходен код на моя проект за добавка RP
+
+tile.your_namespace:custom_block.name=Персонализиран блок~LINEBREAK~§9Океанско чудовище
+
+item.your_namespace:custom_sword=Персонализиран меч~LINEBREAK~§9Океанско чудовище
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Призоваване на персонализирано същество
+
+entity.your_namespace:custom_entity.name=Персонализирано същество

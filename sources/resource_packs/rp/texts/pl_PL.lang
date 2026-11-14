@@ -1,0 +1,10 @@
+pack.name=§6Źródło projektu mojego dodatku RP
+pack.description=Źródło projektu mojego dodatku RP
+
+tile.your_namespace:custom_block.name=Niestandardowy blok~LINEBREAK~§9Oceaniczny potwór
+
+item.your_namespace:custom_sword=Niestandardowy miecz~LINEBREAK~§9Oceaniczny potwór
+
+item.spawn_egg.entity.your_namespace:custom_entity.name=Przywołaj niestandardowy byt
+
+entity.your_namespace:custom_entity.name=Niestandardowy byt
