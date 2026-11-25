@@ -7,6 +7,7 @@
     "output": "batchs\\output.bat",
     "build": "batchs\\build.bat",
     "zip": "batchs\\zip.bat",
+    "release": "batchs\\release.bat",
     "translate": "batchs\\translate-lang.bat",
     "bundle": "node ./sources/behavior_packs/bp/build.js",
     "watch": "nodemon --watch sources/behavior_packs/bp --watch sources/resource_packs/rp --exec \"npm run dev\""
