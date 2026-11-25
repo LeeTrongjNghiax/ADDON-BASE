@@ -3,9 +3,14 @@ setlocal enabledelayedexpansion
 
 REM =====================================================================
 REM  Command-line overrides (for wrapper .bat files):
-REM    copy-parent-folder.bat [/BP:selection] [/RP:selection] [/NS:namespace]
+REM    build.bat [/BP:selection] [/RP:selection] [/NS:namespace] [/OBF:0|1]
 REM
 REM  selection = comma-separated profile numbers, or ALL, e.g. /BP:1,3
+REM  /OBF:1    = minify + obfuscate every .json file in the staged copy
+REM  /OBF:0    = leave JSON readable (also the default when no /OBF: is
+REM              given). The wrapper .bat files (dev.bat, output.bat) own
+REM              this choice -- there is deliberately no on/off setting in
+REM              this file.
 REM  Passing any of these switches runs the WHOLE script in one-click mode
 REM  (every other setting uses its default, no prompts) and uses the
 REM  given value instead of the default for that setting.
@@ -14,16 +19,18 @@ REM  With no /NS: switch, the namespace default (your_namespace, i.e. no
 REM  actual rename) is used.
 REM
 REM  Example wrapper:
-REM    call copy-parent-folder.bat /BP:2 /RP:2 /NS:acme_addon
+REM    call build.bat /BP:2 /RP:2 /NS:acme_addon /OBF:1
 REM =====================================================================
 set "CLI_BP_SELECTION="
 set "CLI_RP_SELECTION="
 set "CLI_NAMESPACE="
+set "CLI_OBFUSCATE="
 for %%A in (%*) do (
     set "ARG=%%~A"
     if /I "!ARG:~0,4!"=="/BP:" set "CLI_BP_SELECTION=!ARG:~4!"
     if /I "!ARG:~0,4!"=="/RP:" set "CLI_RP_SELECTION=!ARG:~4!"
     if /I "!ARG:~0,4!"=="/NS:" set "CLI_NAMESPACE=!ARG:~4!"
+    if /I "!ARG:~0,5!"=="/OBF:" set "CLI_OBFUSCATE=!ARG:~5!"
 )
 
 REM =====================================================================
@@ -42,10 +49,10 @@ REM         - replaces every occurrence of "your_namespace" INSIDE file
 REM           contents with the namespace you provide,
 REM         - renames any FILE whose name contains "your_namespace",
 REM         - renames any FOLDER whose name contains "your_namespace".
-REM    3) Runs scripts\obfuscate-json.js against the staged copy, which
+REM    3) Only when /OBF:1 was passed (dev.bat = 0, output.bat = 1): runs
+REM       scripts\obfuscate-json.js against the staged copy, which
 REM       strips whitespace from every .json file and re-encodes every
-REM       key/string as \uXXXX escapes (set ENABLE_JSON_OBFUSCATION=0
-REM       above to skip this).
+REM       key/string as \uXXXX escapes.
 REM    4) Copies FROM the staged, renamed, obfuscated folders to each
 REM       selected destination profile (same as before).
 REM    5) Deletes the staging folder when done.
@@ -93,10 +100,6 @@ REM way to both source folders and every destination.
 set "EXCLUDE_DIRS=.git .github .husky  batchs douments node_modules sources .vscode"
 set "EXCLUDE_FILES=.gitignore .mcignore .prettierignore .prettierrc build.js commitlint.config.cjs eslint.config.ts package-lock.json package.json tsconfig.json *.zip *.md *.mcpack"
 set "DELETE_SOURCE_AFTER_COPY=0"
-
-REM Set to 0 to skip the JSON minify+obfuscate step below (e.g. while
-REM debugging a destination copy and you want to read the JSON as-is).
-set "ENABLE_JSON_OBFUSCATION=1"
 
 REM Names of FolderA and FolderB (siblings of this script), and the name
 REM of the CHILD folder inside each one that should actually be copied.
@@ -162,7 +165,7 @@ echo  Copy Configuration
 echo ============================================================
 echo.
 
-if not "%CLI_BP_SELECTION%%CLI_RP_SELECTION%%CLI_NAMESPACE%"=="" (
+if not "%CLI_BP_SELECTION%%CLI_RP_SELECTION%%CLI_NAMESPACE%%CLI_OBFUSCATE%"=="" (
     set "AUTO_MODE=Y"
     echo Profile/namespace switch^(es^) passed on the command line --
     echo running in ONE-CLICK mode automatically.
@@ -198,6 +201,20 @@ set "NAMESPACE=%NAMESPACE_DEFAULT%"
 if not "%CLI_NAMESPACE%"=="" set "NAMESPACE=%CLI_NAMESPACE%"
 if /I not "%AUTO_MODE%"=="Y" if "%CLI_NAMESPACE%"=="" set /p "NAMESPACE=Namespace to replace '%PLACEHOLDER_NAMESPACE%' with [%NAMESPACE%]: "
 echo   Using namespace: %NAMESPACE%
+echo.
+
+REM JSON obfuscation is chosen by the caller: /OBF:1 or /OBF:0 from
+REM dev.bat / output.bat. With no switch, auto mode leaves JSON readable
+REM and manual mode asks (default: no).
+set "OBFUSCATE=0"
+if not "%CLI_OBFUSCATE%"=="" set "OBFUSCATE=%CLI_OBFUSCATE%"
+if /I not "%AUTO_MODE%"=="Y" if "%CLI_OBFUSCATE%"=="" set /p "OBFUSCATE=Obfuscate JSON in the staged copy? 1 = yes, 0 = no [%OBFUSCATE%]: "
+if not "%OBFUSCATE%"=="0" if not "%OBFUSCATE%"=="1" (
+    echo Invalid obfuscation value "%OBFUSCATE%" -- use /OBF:0 or /OBF:1.
+    pause
+    exit /b 1
+)
+echo   JSON obfuscation: %OBFUSCATE%
 echo.
 
 set "FOLDER_A_NAME=%FOLDER_A_NAME_DEFAULT%"
@@ -284,7 +301,7 @@ if errorlevel 1 (
 echo.
 
 REM =====================================================================
-REM  JSON MINIFY + OBFUSCATE
+REM  JSON MINIFY + OBFUSCATE   (only when OBFUSCATE=1, i.e. /OBF:1)
 REM  Runs against the STAGED copies only (never the real source folders),
 REM  after the namespace rename and before anything is copied out to a
 REM  destination profile below. Every .json file's whitespace is
@@ -292,7 +309,7 @@ REM  stripped and every key/string value is re-encoded as \uXXXX escapes
 REM  -- valid, functionally identical JSON that's just unreadable to a
 REM  human glancing at the shipped files. See scripts\obfuscate-json.js.
 REM =====================================================================
-if "%ENABLE_JSON_OBFUSCATION%"=="1" (
+if "%OBFUSCATE%"=="1" (
     echo ============================================================
     echo  Obfuscating JSON in staged copies
     echo ============================================================
@@ -302,6 +319,9 @@ if "%ENABLE_JSON_OBFUSCATION%"=="1" (
         pause
         exit /b 1
     )
+    echo.
+) else (
+    echo JSON obfuscation skipped ^(OBFUSCATE=0^).
     echo.
 )
 

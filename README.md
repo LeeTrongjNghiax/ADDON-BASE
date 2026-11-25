@@ -11,7 +11,7 @@ sources/behavior_packs/bp/     behavior pack (manifest, entities, scripts, …)
 sources/resource_packs/rp/     resource pack (textures, models, texts, …)
 sources/behavior_packs/bp/sources/   TypeScript gameplay scripts
 batchs/                        build, deploy, and translate scripts
-scripts/                       translate-lang.js, obfuscate-json.js
+scripts/                       translate-lang.js, obfuscate-json.js, release.js
 ```
 
 Author identifiers, file names, and folders with the placeholder `your_namespace` (for example `your_namespace:custom_block`, or a folder named `your_namespace`). The build replaces that text in file contents, file names, and folder names.
@@ -31,28 +31,28 @@ Before you ship a pack, give the behavior pack and resource pack their own UUIDs
 
 Then set the project defaults at the top of `batchs/build.bat`:
 
-| Setting | What it controls |
-| --- | --- |
-| `NAMESPACE_DEFAULT` | Text that replaces `your_namespace` when you press Enter at the prompt. Default `acme_addon`. |
-| `PROJECT_NAME_DEFAULT` | Folder name used by the dev and live copy profiles (`My Addon Project Source BP` / `RP`). |
-| `BP_PROFILE_*` / `RP_PROFILE_*` | Where each pack is copied. |
-| `EXCLUDE_DIRS` / `EXCLUDE_FILES` | Folders and files left out of the shipped copy. |
-| `ENABLE_JSON_OBFUSCATION` | `1` obfuscates JSON in the staged copy. `0` leaves JSON readable. |
-| `PLACEHOLDER_NAMESPACE` | Search text. Leave this as `your_namespace` unless you change the placeholder in source. |
+| Setting                          | What it controls                                                                              |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `NAMESPACE_DEFAULT`              | Text that replaces `your_namespace` when you press Enter at the prompt. Default `acme_addon`. |
+| `PROJECT_NAME_DEFAULT`           | Folder name used by the dev and live copy profiles (`My Addon Project Source BP` / `RP`).     |
+| `BP_PROFILE_*` / `RP_PROFILE_*`  | Where each pack is copied.                                                                    |
+| `EXCLUDE_DIRS` / `EXCLUDE_FILES` | Folders and files left out of the shipped copy.                                               |
+| `PLACEHOLDER_NAMESPACE`          | Search text. Leave this as `your_namespace` unless you change the placeholder in source.      |
 
-`dev.bat` and `output.bat` pass the namespace with `/NS:`. Change `rl_yn` in both files to the namespace you actually ship.
+`dev.bat` and `output.bat` pass the namespace with `/NS:` and decide JSON obfuscation with `/OBF:`. Change `rl_yn` in both files to the namespace you actually ship.
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `npm run bundle` | Bundles and minifies `bp/sources/index.ts` to `bp/scripts/index.js`. |
-| `npm run dev` | Bundles, then copies both packs to the **dev** profile with `/NS:rl_yn`. |
-| `npm run output` | Bundles, then copies both packs to the **output** profile with `/NS:rl_yn`. |
-| `npm run build` | Bundles, then opens `build.bat` so you can pick profiles and a namespace. |
-| `npm run watch` | Re-runs `npm run dev` when files under `bp` or `rp` change. |
-| `npm run translate` | Translates `en_US.lang` into the locale list and updates `languages.json`. |
-| `npm run zip` | Zips a behavior pack and a resource pack into one archive. See [Zip](#zip). |
+| Command             | What it does                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `npm run bundle`    | Bundles and minifies `bp/sources/index.ts` to `bp/scripts/index.js`.                                       |
+| `npm run dev`       | Bundles, then copies both packs to the **dev** profile with `/NS:rl_yn`.                                   |
+| `npm run output`    | Bundles, then copies both packs to the **output** profile with `/NS:rl_yn`.                                |
+| `npm run build`     | Bundles, then opens `build.bat` so you can pick profiles and a namespace.                                  |
+| `npm run watch`     | Re-runs `npm run dev` when files under `bp` or `rp` change.                                                |
+| `npm run translate` | Translates `en_US.lang` into the locale list and updates `languages.json`.                                 |
+| `npm run zip`       | Zips a behavior pack and a resource pack into one archive. See [Zip](#zip).                                |
+| `npm run release`   | Packs the built output packs into a versioned `.mcaddon` under `assets/version/`. See [Release](#release). |
 
 `npm run dev`, `npm run output`, and `npm run build` launch the batch files only. After you change TypeScript under `bp/sources/`, run `npm run bundle` before a deploy so `scripts/index.js` is current. `npm run watch` repeats `npm run dev` and does not bundle on its own.
 
@@ -63,20 +63,20 @@ Then set the project defaults at the top of `batchs/build.bat`:
 1. **Stage.** Copies `sources/behavior_packs/bp` and `sources/resource_packs/rp` into a temp folder. The folders under `sources/` stay as you wrote them.
 2. **Drop unused files and folders.** `robocopy` applies `EXCLUDE_DIRS` and `EXCLUDE_FILES`, so git metadata, `node_modules`, this repo’s `sources` and `batchs` trees, configs, and `*.md` / `*.zip` / `*.mcpack` never land in the pack.
 3. **Rename the namespace.** `batchs/rename-namespace.ps1` replaces `your_namespace` inside file contents, then renames files and folders whose names contain it. Deepest folders are renamed first. Images, audio, fonts, and archives (`.png`, `.ogg`, `.ttf`, `.zip`, `.mcpack`, and the rest of the skip list in that script) are left byte-for-byte. `.mcstructure` is not on that list, so a structure file whose bytes contain the placeholder text is rewritten as UTF-8.
-4. **Obfuscate JSON.** `scripts/obfuscate-json.js` minifies every `.json` file in the staged packs and rewrites keys and string values as `\uXXXX` escapes. Numbers, booleans, and `null` stay literal. Each file is parsed back and compared to the original; a file that does not round-trip is left unchanged and reported. `//` and `/* */` comments outside strings are stripped before parse. Set `ENABLE_JSON_OBFUSCATION=0` in `build.bat` to skip this step.
+4. **Obfuscate JSON.** `scripts/obfuscate-json.js` minifies every `.json` file in the staged packs and rewrites keys and string values as `\uXXXX` escapes. Numbers, booleans, and `null` stay literal. Each file is parsed back and compared to the original; a file that does not round-trip is left unchanged and reported. `//` and `/* */` comments outside strings are stripped before parse. This step runs only when `build.bat` receives `/OBF:1`. `output.bat` passes it; `dev.bat` passes `/OBF:0`, so your dev copy stays readable.
 5. **Copy the packs.** Copies the staged behavior pack and resource pack into the profiles you selected, then deletes the temp folder.
 
-One-click mode (answering `Y`, or passing any of `/BP:`, `/RP:`, `/NS:`) deletes an existing destination folder and copies over it. Manual mode asks before that delete.
+One-click mode (answering `Y`, or passing any of `/BP:`, `/RP:`, `/NS:`, `/OBF:`) deletes an existing destination folder and copies over it. Manual mode asks before that delete.
 
 ### Profiles
 
 Each pack has its own list in `build.bat`. The defaults are:
 
-| # | Name | Behavior pack parent | Resource pack parent | Copied folder name |
-| --- | --- | --- | --- | --- |
-| 1 | dev | `C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_behavior_packs` | `...\development_resource_packs` | `My Addon Project Source BP` / `RP` |
-| 2 | live | `...\com.mojang\behavior_packs` | `...\com.mojang\resource_packs` | same display name |
-| 3 | output | `C:\My Addon Project Source\Content\behavior_packs` | `...\Content\resource_packs` | `<namespace>_b` / `<namespace>_r` |
+| #   | Name   | Behavior pack parent                                                                                        | Resource pack parent             | Copied folder name                  |
+| --- | ------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------------- |
+| 1   | dev    | `C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_behavior_packs` | `...\development_resource_packs` | `My Addon Project Source BP` / `RP` |
+| 2   | live   | `...\com.mojang\behavior_packs`                                                                             | `...\com.mojang\resource_packs`  | same display name                   |
+| 3   | output | `C:\My Addon Project Source\Content\behavior_packs`                                                         | `...\Content\resource_packs`     | `<namespace>_b` / `<namespace>_r`   |
 
 Those `com.mojang` paths are written for the `Admin` Windows user. Point `BP_PROFILE_*_PARENT` and `RP_PROFILE_*_PARENT` at your own Minecraft folders.
 
@@ -85,16 +85,18 @@ Profile 3’s folder name is filled from the `/NS:` switch (`rl_yn_b`, `rl_yn_r`
 `dev.bat` runs:
 
 ```bat
-build.bat /BP:1 /RP:1 /NS:rl_yn
+build.bat /BP:1 /RP:1 /NS:rl_yn /OBF:0
 ```
 
 `output.bat` runs:
 
 ```bat
-build.bat /BP:3 /RP:3 /NS:rl_yn
+build.bat /BP:3 /RP:3 /NS:rl_yn /OBF:1
 ```
 
 Selection values are profile numbers, `ALL`, or a comma list such as `/BP:1,3`. A pack with no `/BP:` or `/RP:` switch uses profile 1.
+
+`/OBF:` takes `1` (minify and obfuscate JSON) or `0` (leave it readable); any other value stops the build. With no `/OBF:` switch, one-click mode skips obfuscation and manual mode asks, defaulting to no. To change what a wrapper does, edit the `/OBF:` value in `dev.bat` or `output.bat`.
 
 ### Files and folders left out of the copy
 
@@ -128,3 +130,26 @@ Optional `.env` overrides: `GEMINI_MODEL`, `GEMINI_BATCH_SIZE`, `GEMINI_REQUEST_
 `batchs\zip.bat` stages a behavior pack and a resource pack with its own exclude lists, zips the contents of each (no wrapping `bp` or `rp` folder), and puts `bp.zip` and `rp.zip` inside one archive. Default destination is `C:\My Addon Project`, filename `My Addon Project.zip`.
 
 The default source paths are `behavior_packs\bp` and `resource_packs\rp` next to the batch file. This template keeps packs under `sources\`, so at the prompts set Folder A to `..\sources\behavior_packs` and Folder B to `..\sources\resource_packs`, or change `FOLDER_A_NAME_DEFAULT` and `FOLDER_B_NAME_DEFAULT` in `zip.bat`. The zip step does not rename the namespace or obfuscate JSON; run `output` when you want the processed packs, and zip that output if you need an archive of the shipped files.
+
+## Release
+
+`batchs\release.bat` (run by `npm run release`) packs the built behavior pack and resource pack into one `.mcaddon` and files it under `assets\version\`. Run `npm run output` first: the release packs whatever is already in the output folders and does not rebuild. It zips the output profile (renamed namespace, obfuscated JSON, tooling removed), not `sources\`.
+
+Each release gets its own folder, named from the two `header.version` values in the packs' `manifest.json` files plus an index:
+
+```
+assets/version/
+  v1.0.1__1.0.2__0/v1.0.1__1.0.2__0.mcaddon
+  v1.0.1__1.0.2__1/v1.0.1__1.0.2__1.mcaddon
+  v1.0.2__1.0.2__0/v1.0.2__1.0.2__0.mcaddon
+```
+
+The index is the next unused number for that exact behavior pack / resource pack version pair, so releasing again with unchanged versions counts up (`__1`, `__2`, …). When either pack's version changes, the index starts again at `0`. Existing folders are never overwritten. Bump the version in both manifests (and the resource pack's dependency on the behavior pack) when you ship a change.
+
+The `.mcaddon` holds the two pack folders at its root, for example `rl_yn_b/` and `rl_yn_r/`, with forward-slash paths so it imports on every platform. `scripts\release.js` writes the zip itself, so there is nothing extra to install.
+
+The output folders are set at the top of `release.bat` (`PROJECT_NAME` and `NAMESPACE`). They must match profile 3 in `build.bat` and the `/NS:` value in `output.bat`. `release.bat /NS:other_ns` overrides the namespace for one run. To pack other folders, call the script directly:
+
+```bat
+node scripts/release.js --bp <behavior pack folder> --rp <resource pack folder> [--out <folder>]
+```
