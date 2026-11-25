@@ -126,7 +126,13 @@ REM  Destination profiles for SOURCE 1 (the child folder inside
 REM  FolderA, e.g. "bp"). Add more by adding BP_PROFILE_4_* lines
 REM  and raising BP_PROFILE_COUNT.
 REM ---------------------------------------------------------------
-set "BP_PROFILE_COUNT=3"
+REM Profile 4 ("release") is the scratch location release.bat builds into
+REM before it packs the .mcaddon. release.bat sets RELEASE_STAGE_DIR itself
+REM and deletes the folder afterwards; the fallback below only matters if
+REM you pick profile 4 by hand, so it never resolves to a drive root.
+if not defined RELEASE_STAGE_DIR set "RELEASE_STAGE_DIR=%TEMP%\addon-release"
+
+set "BP_PROFILE_COUNT=4"
 
 set "BP_PROFILE_1_NAME=dev"
 set "BP_PROFILE_1_PARENT=C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_behavior_packs"
@@ -140,12 +146,16 @@ set "BP_PROFILE_3_NAME=output"
 set "BP_PROFILE_3_PARENT=C:\%PROJECT_NAME_DEFAULT%\Content\behavior_packs"
 set "BP_PROFILE_3_FOLDERNAME=%CLI_NAMESPACE%_b"
 
+set "BP_PROFILE_4_NAME=release"
+set "BP_PROFILE_4_PARENT=%RELEASE_STAGE_DIR%\behavior_packs"
+set "BP_PROFILE_4_FOLDERNAME=%CLI_NAMESPACE%_b"
+
 REM ---------------------------------------------------------------
 REM  Destination profiles for SOURCE 2 (the child folder inside
 REM  FolderB, e.g. "rp"). Add more by adding RP_PROFILE_4_* lines
 REM  and raising RP_PROFILE_COUNT.
 REM ---------------------------------------------------------------
-set "RP_PROFILE_COUNT=3"
+set "RP_PROFILE_COUNT=4"
 
 set "RP_PROFILE_1_NAME=dev"
 set "RP_PROFILE_1_PARENT=C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_resource_packs"
@@ -158,6 +168,10 @@ set "RP_PROFILE_2_FOLDERNAME=%PROJECT_NAME_DEFAULT% RP"
 set "RP_PROFILE_3_NAME=output"
 set "RP_PROFILE_3_PARENT=C:\%PROJECT_NAME_DEFAULT%\Content\resource_packs"
 set "RP_PROFILE_3_FOLDERNAME=%CLI_NAMESPACE%_r"
+
+set "RP_PROFILE_4_NAME=release"
+set "RP_PROFILE_4_PARENT=%RELEASE_STAGE_DIR%\resource_packs"
+set "RP_PROFILE_4_FOLDERNAME=%CLI_NAMESPACE%_r"
 REM ==========================================================
 
 echo ============================================================

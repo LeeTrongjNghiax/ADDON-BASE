@@ -17,9 +17,10 @@
 // assets/version is ever overwritten or deleted.
 //
 // The versions come from "header.version" in the manifest.json of the
-// folders being packed, so the packs you point this at should be the
-// BUILT ones (the "output" profile: namespace renamed, JSON obfuscated,
-// dev files removed), not the raw sources/ folders.
+// folders being packed, so the packs you point this at should be BUILT
+// ones (namespace renamed, JSON obfuscated, dev files removed), not the
+// raw sources/ folders. batchs/release.bat builds exactly that into a
+// scratch folder and then calls this script.
 //
 // A .mcaddon is a plain zip with each pack folder at its root. Entry
 // names always use forward slashes, so the archive also imports on
@@ -96,7 +97,7 @@ function stripJsonComments(text) {
 function readVersion(packDir, label) {
   const manifestPath = path.join(packDir, "manifest.json");
   if (!fs.existsSync(packDir) || !fs.statSync(packDir).isDirectory()) {
-    fail(`${label} folder not found: ${packDir}\n  Run output.bat first so the built packs exist.`);
+    fail(`${label} folder not found: ${packDir}\n  Build the packs first (batchs/release.bat does that for you).`);
   }
   if (!fs.existsSync(manifestPath)) fail(`${label} folder has no manifest.json: ${packDir}`);
 

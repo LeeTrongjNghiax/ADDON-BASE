@@ -49,4 +49,5 @@ esbuild
   })
   .catch(error => {
     console.error(`Bundling failed: ${error}`);
+    process.exitCode = 1;
   });

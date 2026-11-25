@@ -43,16 +43,16 @@ Then set the project defaults at the top of `batchs/build.bat`:
 
 ## Commands
 
-| Command             | What it does                                                                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `npm run bundle`    | Bundles and minifies `bp/sources/index.ts` to `bp/scripts/index.js`.                                       |
-| `npm run dev`       | Bundles, then copies both packs to the **dev** profile with `/NS:rl_yn`.                                   |
-| `npm run output`    | Bundles, then copies both packs to the **output** profile with `/NS:rl_yn`.                                |
-| `npm run build`     | Bundles, then opens `build.bat` so you can pick profiles and a namespace.                                  |
-| `npm run watch`     | Re-runs `npm run dev` when files under `bp` or `rp` change.                                                |
-| `npm run translate` | Translates `en_US.lang` into the locale list and updates `languages.json`.                                 |
-| `npm run zip`       | Zips a behavior pack and a resource pack into one archive. See [Zip](#zip).                                |
-| `npm run release`   | Packs the built output packs into a versioned `.mcaddon` under `assets/version/`. See [Release](#release). |
+| Command             | What it does                                                                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run bundle`    | Bundles and minifies `bp/sources/index.ts` to `bp/scripts/index.js`.                                                                                       |
+| `npm run dev`       | Bundles, then copies both packs to the **dev** profile with `/NS:rl_yn`.                                                                                   |
+| `npm run output`    | Bundles, then copies both packs to the **output** profile with `/NS:rl_yn`.                                                                                |
+| `npm run build`     | Bundles, then opens `build.bat` so you can pick profiles and a namespace.                                                                                  |
+| `npm run watch`     | Re-runs `npm run dev` when files under `bp` or `rp` change.                                                                                                |
+| `npm run translate` | Translates `en_US.lang` into the locale list and updates `languages.json`.                                                                                 |
+| `npm run zip`       | Zips a behavior pack and a resource pack into one archive. See [Zip](#zip).                                                                                |
+| `npm run release`   | Bundles the scripts, builds an obfuscated copy of both packs, and packs them into a versioned `.mcaddon` under `assets/version/`. See [Release](#release). |
 
 `npm run dev`, `npm run output`, and `npm run build` launch the batch files only. After you change TypeScript under `bp/sources/`, run `npm run bundle` before a deploy so `scripts/index.js` is current. `npm run watch` repeats `npm run dev` and does not bundle on its own.
 
@@ -72,15 +72,18 @@ One-click mode (answering `Y`, or passing any of `/BP:`, `/RP:`, `/NS:`, `/OBF:`
 
 Each pack has its own list in `build.bat`. The defaults are:
 
-| #   | Name   | Behavior pack parent                                                                                        | Resource pack parent             | Copied folder name                  |
-| --- | ------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------------- |
-| 1   | dev    | `C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_behavior_packs` | `...\development_resource_packs` | `My Addon Project Source BP` / `RP` |
-| 2   | live   | `...\com.mojang\behavior_packs`                                                                             | `...\com.mojang\resource_packs`  | same display name                   |
-| 3   | output | `C:\My Addon Project Source\Content\behavior_packs`                                                         | `...\Content\resource_packs`     | `<namespace>_b` / `<namespace>_r`   |
+| #   | Name    | Behavior pack parent                                                                                        | Resource pack parent               | Copied folder name                  |
+| --- | ------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------- |
+| 1   | dev     | `C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_behavior_packs` | `...\development_resource_packs`   | `My Addon Project Source BP` / `RP` |
+| 2   | live    | `...\com.mojang\behavior_packs`                                                                             | `...\com.mojang\resource_packs`    | same display name                   |
+| 3   | output  | `C:\My Addon Project Source\Content\behavior_packs`                                                         | `...\Content\resource_packs`       | `<namespace>_b` / `<namespace>_r`   |
+| 4   | release | `%TEMP%\addon-release\behavior_packs`                                                                       | `...\addon-release\resource_packs` | `<namespace>_b` / `<namespace>_r`   |
 
 Those `com.mojang` paths are written for the `Admin` Windows user. Point `BP_PROFILE_*_PARENT` and `RP_PROFILE_*_PARENT` at your own Minecraft folders.
 
-Profile 3’s folder name is filled from the `/NS:` switch (`rl_yn_b`, `rl_yn_r` with the wrappers). A namespace typed at the interactive prompt updates file contents and file names; it does not rewrite those profile-3 folder names, because they are set from `/NS:` when the script starts.
+Profile 4 is a scratch location for `release.bat`: it builds there, packs the `.mcaddon`, and deletes the folder. You do not need it for anything else.
+
+Profile 3 and 4’s folder names are filled from the `/NS:` switch (`rl_yn_b`, `rl_yn_r` with the wrappers). A namespace typed at the interactive prompt updates file contents and file names; it does not rewrite those profile-3 and profile-4 folder names, because they are set from `/NS:` when the script starts.
 
 `dev.bat` runs:
 
@@ -133,7 +136,12 @@ The default source paths are `behavior_packs\bp` and `resource_packs\rp` next to
 
 ## Release
 
-`batchs\release.bat` (run by `npm run release`) packs the built behavior pack and resource pack into one `.mcaddon` and files it under `assets\version\`. Run `npm run output` first: the release packs whatever is already in the output folders and does not rebuild. It zips the output profile (renamed namespace, obfuscated JSON, tooling removed), not `sources\`.
+`batchs\release.bat` (run by `npm run release`) goes from your sources to a shippable `.mcaddon` on its own, without `output.bat`:
+
+1. Bundles the TypeScript to `scripts/index.js`, and stops if that fails.
+2. Runs `build.bat` into a scratch folder (profile 4, `/OBF:1`): namespace renamed, JSON obfuscated, tooling left out.
+3. Packs that copy into the `.mcaddon` and files it under `assets\version\`.
+4. Deletes the scratch folder. Your sources and every other profile folder are untouched.
 
 Each release gets its own folder, named from the two `header.version` values in the packs' `manifest.json` files plus an index:
 
@@ -148,7 +156,7 @@ The index is the next unused number for that exact behavior pack / resource pack
 
 The `.mcaddon` holds the two pack folders at its root, for example `rl_yn_b/` and `rl_yn_r/`, with forward-slash paths so it imports on every platform. `scripts\release.js` writes the zip itself, so there is nothing extra to install.
 
-The output folders are set at the top of `release.bat` (`PROJECT_NAME` and `NAMESPACE`). They must match profile 3 in `build.bat` and the `/NS:` value in `output.bat`. `release.bat /NS:other_ns` overrides the namespace for one run. To pack other folders, call the script directly:
+The namespace the released packs use is set at the top of `release.bat` (`NAMESPACE`, default `rl_yn`); `release.bat /NS:other_ns` overrides it for one run. To pack folders you built some other way, call the script directly:
 
 ```bat
 node scripts/release.js --bp <behavior pack folder> --rp <resource pack folder> [--out <folder>]
