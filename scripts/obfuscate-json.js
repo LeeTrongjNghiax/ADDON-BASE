@@ -121,7 +121,9 @@ function obfuscateValue(value) {
 }
 
 function processFile(filePath, stats) {
-  const original = fs.readFileSync(filePath, "utf8");
+  // Strip a UTF-8 BOM if present: JSON.parse rejects it, and that used to
+  // make every file touched by the namespace rename get silently skipped.
+  const original = fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, "");
 
   let parsed;
   try {

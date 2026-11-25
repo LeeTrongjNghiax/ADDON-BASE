@@ -41,13 +41,21 @@ if (-not (Test-Path -LiteralPath $StagePath)) {
 Write-Host "  Processing: $StagePath"
 $escapedOld = [regex]::Escape($OldNamespace)
 
+# Read and write as UTF-8 WITHOUT a byte-order mark. Windows PowerShell 5.1's
+# `Set-Content -Encoding UTF8` always prepends a BOM, and `Get-Content` with
+# no -Encoding reads BOM-less UTF-8 as ANSI. Together they (a) made every
+# rewritten .json fail to parse in obfuscate-json.js, (b) can put a BOM in
+# front of .mcfunction / .lang files, and (c) garble non-ASCII text such as
+# the translated .lang files. ReadAllText still strips a BOM if one exists.
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
 # --- 1. Replace text content inside files (do this BEFORE any renaming,
 #         while paths are still the original ones) ---
 Get-ChildItem -LiteralPath $StagePath -Recurse -File | ForEach-Object {
     if ($SkipExtensions -contains $_.Extension.ToLower()) { return }
 
     try {
-        $content = Get-Content -LiteralPath $_.FullName -Raw -ErrorAction Stop
+        $content = [System.IO.File]::ReadAllText($_.FullName, $utf8NoBom)
     } catch {
         return
     }
@@ -55,7 +63,7 @@ Get-ChildItem -LiteralPath $StagePath -Recurse -File | ForEach-Object {
     if ($content -notmatch $escapedOld) { return }
 
     $updated = $content -replace $escapedOld, $NewNamespace
-    Set-Content -LiteralPath $_.FullName -Value $updated -NoNewline -Encoding UTF8
+    [System.IO.File]::WriteAllText($_.FullName, $updated, $utf8NoBom)
     Write-Host "    content updated: $($_.FullName.Substring($StagePath.Length))"
 }
 
