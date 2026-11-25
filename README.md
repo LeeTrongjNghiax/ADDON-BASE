@@ -147,10 +147,12 @@ Each release gets its own folder, named from the two `header.version` values in 
 
 ```
 assets/version/
-  v1.0.1__1.0.2__0/v1.0.1__1.0.2__0.mcaddon
-  v1.0.1__1.0.2__1/v1.0.1__1.0.2__1.mcaddon
-  v1.0.2__1.0.2__0/v1.0.2__1.0.2__0.mcaddon
+  v1.0.1__1.0.2__0/My Addon Project Source - v1.0.1__1.0.2__0.mcaddon
+  v1.0.1__1.0.2__1/My Addon Project Source - v1.0.1__1.0.2__1.mcaddon
+  v1.0.2__1.0.2__0/My Addon Project Source - v1.0.2__1.0.2__0.mcaddon
 ```
+
+The file is named `<project name> - <folder name>`. The project name is `PROJECT_NAME_DEFAULT` in `build.bat`, so it is configured in one place. Characters Windows does not allow in file names are replaced with `_`. If that line cannot be read, the file is named after its folder alone.
 
 The index is the next unused number for that exact behavior pack / resource pack version pair, so releasing again with unchanged versions counts up (`__1`, `__2`, …). When either pack's version changes, the index starts again at `0`. Existing folders are never overwritten. Bump the version in both manifests (and the resource pack's dependency on the behavior pack) when you ship a change.
 
@@ -159,5 +161,5 @@ The `.mcaddon` holds the two pack folders at its root, for example `rl_yn_b/` an
 The namespace the released packs use is set at the top of `release.bat` (`NAMESPACE`, default `rl_yn`); `release.bat /NS:other_ns` overrides it for one run. To pack folders you built some other way, call the script directly:
 
 ```bat
-node scripts/release.js --bp <behavior pack folder> --rp <resource pack folder> [--out <folder>]
+node scripts/release.js --bp <behavior pack folder> --rp <resource pack folder> [--out <folder>] [--name <project name>]
 ```

@@ -4,10 +4,11 @@
 // and files it under assets/version/, in a sub-directory named after the
 // two pack versions plus a running index:
 //
-//   assets/version/v<BP version>__<RP version>__<index>/<same name>.mcaddon
+//   assets/version/v<BP>__<RP>__<index>/<project name> - v<BP>__<RP>__<index>.mcaddon
 //
-// Example: BP 1.0.1 + RP 1.0.2 gives
-//   assets/version/v1.0.1__1.0.2__0/v1.0.1__1.0.2__0.mcaddon
+// The project name is PROJECT_NAME_DEFAULT in batchs/build.bat. Example:
+// BP 1.0.1 + RP 1.0.2 with the project name "My Addon" gives
+//   assets/version/v1.0.1__1.0.2__0/My Addon - v1.0.1__1.0.2__0.mcaddon
 //
 // Every run creates a NEW sub-directory. The index is the next unused
 // number for that exact BP/RP version pair (0, 1, 2, ...), so releasing
@@ -30,6 +31,7 @@
 // Usage:
 //   node scripts/release.js --bp <behavior pack dir> --rp <resource pack dir>
 //                           [--out <dir, default: <project>/assets/version>]
+//                           [--name <project name, default: from build.bat>]
 
 import fs from "fs";
 import path from "path";
@@ -38,6 +40,7 @@ import { fileURLToPath } from "url";
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEFAULT_OUT = path.join(PROJECT_ROOT, "assets", "version");
+const BUILD_BAT = path.join(PROJECT_ROOT, "batchs", "build.bat");
 
 // Never worth shipping, whatever the folder holds.
 const IGNORED_FILES = new Set([".ds_store", "thumbs.db", "desktop.ini"]);
@@ -50,19 +53,23 @@ function fail(message) {
 // ---------------------------------------------------------------- args
 
 function parseArgs(argv) {
-  const args = { bp: null, rp: null, out: DEFAULT_OUT };
+  const args = { bp: null, rp: null, out: DEFAULT_OUT, name: null };
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
     if (flag === "--bp" || flag === "--rp" || flag === "--out") {
       const value = argv[++i];
       if (!value) fail(`${flag} needs a value.`);
       args[flag.slice(2)] = path.resolve(value);
+    } else if (flag === "--name") {
+      const value = argv[++i];
+      if (!value) fail("--name needs a value.");
+      args.name = value;
     } else {
       fail(`Unknown argument: ${flag}`);
     }
   }
   if (!args.bp || !args.rp) {
-    fail("Usage: node scripts/release.js --bp <behavior pack dir> --rp <resource pack dir> [--out <dir>]");
+    fail("Usage: node scripts/release.js --bp <behavior pack dir> --rp <resource pack dir> [--out <dir>] [--name <project name>]");
   }
   return args;
 }
@@ -122,6 +129,31 @@ function readVersion(packDir, label) {
   }
   if (typeof v === "string" && /^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$/.test(v)) return v;
   fail(`${label} manifest has no usable header.version (expected [1, 0, 0]): ${manifestPath}`);
+}
+
+// ------------------------------------------------------------ file name
+
+// PROJECT_NAME_DEFAULT from batchs/build.bat, so the project name is
+// configured in one place only. Returns null when it can't be read.
+function projectNameFromBuildBat() {
+  let text;
+  try {
+    text = fs.readFileSync(BUILD_BAT, "utf8");
+  } catch {
+    return null;
+  }
+  const match = /^[ \t]*set[ \t]+"PROJECT_NAME_DEFAULT=(.*)"[ \t]*\r?$/im.exec(text);
+  if (!match || !match[1].trim()) return null;
+  if (/[%!]/.test(match[1])) {
+    console.warn(`Note: PROJECT_NAME_DEFAULT in ${BUILD_BAT} uses a variable; pass --name instead.`);
+    return null;
+  }
+  return match[1].trim();
+}
+
+// Replace what Windows does not allow in a file name, and trailing dots/spaces.
+function toFileName(name) {
+  return name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_").replace(/[. ]+$/, "");
 }
 
 // ------------------------------------------------------- index / folder
@@ -264,7 +296,7 @@ function writeZip(zipPath, files) {
 // ----------------------------------------------------------------- main
 
 function main() {
-  const { bp, rp, out } = parseArgs(process.argv.slice(2));
+  const { bp, rp, out, name } = parseArgs(process.argv.slice(2));
 
   const bpName = path.basename(bp);
   const rpName = path.basename(rp);
@@ -279,7 +311,17 @@ function main() {
   const index = nextIndex(out, prefix);
   const releaseName = `${prefix}${index}`;
   const releaseDir = path.join(out, releaseName);
-  const finalPath = path.join(releaseDir, `${releaseName}.mcaddon`);
+
+  // "<project name> - <version folder name>"; just the folder name when
+  // no project name can be found.
+  const projectName = toFileName(name ?? projectNameFromBuildBat() ?? "");
+  let fileBase = releaseName;
+  if (projectName) {
+    fileBase = `${projectName} - ${releaseName}`;
+  } else {
+    console.warn(`Note: no project name found in ${BUILD_BAT}; naming the file after the folder only.`);
+  }
+  const finalPath = path.join(releaseDir, `${fileBase}.mcaddon`);
 
   const files = [...collectFiles(bp, bpName), ...collectFiles(rp, rpName)];
   if (files.length === 0) fail("Both pack folders are empty.");

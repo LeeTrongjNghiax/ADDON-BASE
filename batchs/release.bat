@@ -14,7 +14,9 @@ REM       out -- the same pipeline as every other build.
 REM    3) Packs that copy into one .mcaddon with scripts\release.js and
 REM       files it under assets\version\ :
 REM
-REM         assets\version\v<BP version>__<RP version>__<index>\<same>.mcaddon
+REM         assets\version\v<BP>__<RP>__<index>\<project> - v<BP>__<RP>__<index>.mcaddon
+REM
+REM       <project> is PROJECT_NAME_DEFAULT in build.bat.
 REM
 REM       Every run makes a new folder. The index counts up (0, 1, 2, ...)
 REM       while the BP and RP versions in their manifest.json stay the
