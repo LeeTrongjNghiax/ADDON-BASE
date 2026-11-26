@@ -11,7 +11,8 @@ sources/behavior_packs/bp/     behavior pack (manifest, entities, scripts, …)
 sources/resource_packs/rp/     resource pack (textures, models, texts, …)
 sources/behavior_packs/bp/sources/   TypeScript gameplay scripts
 batchs/                        build, deploy, and translate scripts
-scripts/                       translate-lang.js, obfuscate-json.js, release.js
+scripts/                       translate-lang.js, obfuscate-json.js, release.js, market.js
+scripts/lib/pack-tools.js      zip writer and version-folder logic shared by release.js and market.js
 ```
 
 Author identifiers, file names, and folders with the placeholder `your_namespace` (for example `your_namespace:custom_block`, or a folder named `your_namespace`). The build replaces that text in file contents, file names, and folder names.
@@ -31,27 +32,28 @@ Before you ship a pack, give the behavior pack and resource pack their own UUIDs
 
 Then set the project defaults at the top of `batchs/build.bat`:
 
-| Setting                          | What it controls                                                                              |
-| -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `NAMESPACE_DEFAULT`              | Text that replaces `your_namespace` when you press Enter at the prompt. Default `acme_addon`. |
-| `PROJECT_NAME_DEFAULT`           | Folder name used by the dev and live copy profiles (`My Addon Project Source BP` / `RP`).     |
-| `BP_PROFILE_*` / `RP_PROFILE_*`  | Where each pack is copied.                                                                    |
-| `EXCLUDE_DIRS` / `EXCLUDE_FILES` | Folders and files left out of the shipped copy.                                               |
-| `PLACEHOLDER_NAMESPACE`          | Search text. Leave this as `your_namespace` unless you change the placeholder in source.      |
+| Setting | What it controls |
+| --- | --- |
+| `NAMESPACE_DEFAULT` | Text that replaces `your_namespace` when you press Enter at the prompt. Default `acme_addon`. |
+| `PROJECT_NAME_DEFAULT` | Folder name used by the dev and live copy profiles (`My Addon Project Source BP` / `RP`). |
+| `BP_PROFILE_*` / `RP_PROFILE_*` | Where each pack is copied. |
+| `EXCLUDE_DIRS` / `EXCLUDE_FILES` | Folders and files left out of the shipped copy. |
+| `PLACEHOLDER_NAMESPACE` | Search text. Leave this as `your_namespace` unless you change the placeholder in source. |
 
 `dev.bat` and `output.bat` pass the namespace with `/NS:` and decide JSON obfuscation with `/OBF:`. Change `rl_yn` in both files to the namespace you actually ship.
 
 ## Commands
 
-| Command             | What it does                                                                                                                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run bundle`    | Bundles and minifies `bp/sources/index.ts` to `bp/scripts/index.js`.                                                                                       |
-| `npm run dev`       | Bundles, then copies both packs to the **dev** profile with `/NS:rl_yn`.                                                                                   |
-| `npm run output`    | Bundles, then copies both packs to the **output** profile with `/NS:rl_yn`.                                                                                |
-| `npm run build`     | Bundles, then opens `build.bat` so you can pick profiles and a namespace.                                                                                  |
-| `npm run watch`     | Re-runs `npm run dev` when files under `bp` or `rp` change.                                                                                                |
-| `npm run translate` | Translates `en_US.lang` into the locale list and updates `languages.json`.                                                                                 |
-| `npm run release`   | Bundles the scripts, builds an obfuscated copy of both packs, and packs them into a versioned `.mcaddon` under `assets/version/`. See [Release](#release). |
+| Command | What it does |
+| --- | --- |
+| `npm run bundle` | Bundles and minifies `bp/sources/index.ts` to `bp/scripts/index.js`. |
+| `npm run dev` | Bundles, then copies both packs to the **dev** profile with `/NS:rl_yn`. |
+| `npm run output` | Bundles, then copies both packs to the **output** profile with `/NS:rl_yn`. |
+| `npm run build` | Bundles, then opens `build.bat` so you can pick profiles and a namespace. |
+| `npm run watch` | Re-runs `npm run dev` when files under `bp` or `rp` change. |
+| `npm run translate` | Translates `en_US.lang` into the locale list and updates `languages.json`. |
+| `npm run release` | Bundles the scripts, builds an obfuscated copy of both packs, and packs them into a versioned `.mcaddon` under `assets/version/`. See [Release](#release). |
+| `npm run market` | Same build, packed as `<ProjectName>_<version>.zip` with a single `Content` folder. See [Market](#market). |
 
 `npm run dev`, `npm run output`, and `npm run build` launch the batch files only. After you change TypeScript under `bp/sources/`, run `npm run bundle` before a deploy so `scripts/index.js` is current. `npm run watch` repeats `npm run dev` and does not bundle on its own.
 
@@ -71,16 +73,16 @@ One-click mode (answering `Y`, or passing any of `/BP:`, `/RP:`, `/NS:`, `/OBF:`
 
 Each pack has its own list in `build.bat`. The defaults are:
 
-| #   | Name    | Behavior pack parent                                                                                        | Resource pack parent               | Copied folder name                  |
-| --- | ------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------- |
-| 1   | dev     | `C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_behavior_packs` | `...\development_resource_packs`   | `My Addon Project Source BP` / `RP` |
-| 2   | live    | `...\com.mojang\behavior_packs`                                                                             | `...\com.mojang\resource_packs`    | same display name                   |
-| 3   | output  | `C:\My Addon Project Source\Content\behavior_packs`                                                         | `...\Content\resource_packs`       | `<namespace>_b` / `<namespace>_r`   |
-| 4   | release | `%TEMP%\addon-release\behavior_packs`                                                                       | `...\addon-release\resource_packs` | `<namespace>_b` / `<namespace>_r`   |
+| # | Name | Behavior pack parent | Resource pack parent | Copied folder name |
+| --- | --- | --- | --- | --- |
+| 1 | dev | `C:\Users\Admin\AppData\Roaming\Minecraft Bedrock\Users\Shared\games\com.mojang\development_behavior_packs` | `...\development_resource_packs` | `My Addon Project Source BP` / `RP` |
+| 2 | live | `...\com.mojang\behavior_packs` | `...\com.mojang\resource_packs` | same display name |
+| 3 | output | `C:\My Addon Project Source\Content\behavior_packs` | `...\Content\resource_packs` | `<namespace>_b` / `<namespace>_r` |
+| 4 | release | `%TEMP%\addon-release\behavior_packs` | `...\addon-release\resource_packs` | `<namespace>_b` / `<namespace>_r` |
 
 Those `com.mojang` paths are written for the `Admin` Windows user. Point `BP_PROFILE_*_PARENT` and `RP_PROFILE_*_PARENT` at your own Minecraft folders.
 
-Profile 4 is a scratch location for `release.bat`: it builds there, packs the `.mcaddon`, and deletes the folder. You do not need it for anything else.
+Profile 4 is a scratch location for `release.bat` and `market.bat`: they build there, pack, and delete the folder. You do not need it for anything else.
 
 Profile 3 and 4’s folder names are filled from the `/NS:` switch (`rl_yn_b`, `rl_yn_r` with the wrappers). A namespace typed at the interactive prompt updates file contents and file names; it does not rewrite those profile-3 and profile-4 folder names, because they are set from `/NS:` when the script starts.
 
@@ -114,16 +116,19 @@ Add a name to those lists when a new tooling file should stay out of the shipped
 
 ## Translation
 
-`npm run translate` (or `batchs\translate-lang.bat`) reads `en_US.lang`, writes one `.lang` file per target locale, and rewrites `languages.json` in that texts folder so every locale is listed.
+`npm run translate` (or `batchs\translate-lang.bat`) reads `en_US.lang`, writes a `.lang` file for every target locale that does not have one yet, and rewrites `languages.json` in that texts folder so it lists every locale that has a file.
 
 Defaults in the batch file:
 
 - Source locale: `en_US`
-- Texts folder: `sources\resource_packs\rp\texts` (the behavior pack texts folder is commented in the script; add it to `TEXTS_DIRS_DEFAULT`, separated by `;`, when BP strings should be translated too)
+- Texts folders: `sources\behavior_packs\bp\texts` and `sources\resource_packs\rp\texts`, separated by `;` in `TEXTS_DIRS_DEFAULT`
+- Existing files: `OVERWRITE_EXISTING_DEFAULT=N`. A target `.lang` file that already has content is kept as it is, with no API call, so locales your team writes by hand (precise, local-friendly, culture-friendly wording) are never replaced by machine translation. Answer `Y` at the prompt, or set `OVERWRITE_EXISTING=1`, to regenerate every target file. The source `en_US.lang` is never changed.
 - Protected words, left in the source language: `RP` `BP`
 - Locales: `en_GB de_DE es_ES es_MX fr_FR fr_CA it_IT ja_JP ko_KR pt_BR pt_PT ru_RU zh_CN zh_TW nl_NL bg_BG cs_CZ da_DK el_GR fi_FI hu_HU id_ID nb_NO pl_PL sk_SK sv_SE tr_TR uk_UA`
 
 `scripts/translate-lang.js` sends strings to Gemini (`gemini-2.5-flash`, 40 strings per request) using `GEMINI_API_KEY`. Minecraft formatting codes and `~LINEBREAK~` tokens stay in place. `en_GB` is copied from the source because the target language is English. Answering `Y` at the first prompt uses every default; otherwise each value can be overridden, and Enter keeps the value in brackets.
+
+Because generated files count as existing files too, adding strings to `en_US.lang` does not update locales that were already generated: delete those `.lang` files (or answer `Y` to overwrite) to regenerate them.
 
 Optional `.env` overrides: `GEMINI_MODEL`, `GEMINI_BATCH_SIZE`, `GEMINI_REQUEST_DELAY_MS` (default delay 4500 ms, to stay under free-tier rate limits).
 
@@ -156,3 +161,26 @@ The namespace the released packs use is set at the top of `release.bat` (`NAMESP
 ```bat
 node scripts/release.js --bp <behavior pack folder> --rp <resource pack folder> [--out <folder>] [--name <project name>]
 ```
+
+## Market
+
+`batchs\market.bat` (run by `npm run market`) builds the same way as `release.bat` and packs the result as a `.zip` whose only root folder is `Content`:
+
+```
+Content/behavior_packs/rl_yn_b/...
+Content/resource_packs/rl_yn_r/...
+```
+
+It asks for a version, or take it from `market.bat /VER:1.2.0`. The version is a label for the file name: letters, digits and `.` `_` `+` `-`. A bad one is rejected before the build starts.
+
+The zip goes in `assets\version\` with the same folder rule as the release: a new `v<BP>__<RP>__<index>` folder each run, using the behavior pack and resource pack versions from their manifests. The index is shared with `release.bat`, so a release and a market zip from the same versions land in `__0` and `__1` rather than in one folder.
+
+```
+assets/version/
+  v1.0.1__1.0.2__0/My Addon Project Source - v1.0.1__1.0.2__0.mcaddon   (release)
+  v1.0.1__1.0.2__1/MyAddonProjectSource_1.2.0.zip                        (market)
+```
+
+The file is `<ProjectName>_<version>.zip`. `<ProjectName>` is `PROJECT_NAME_DEFAULT` in `build.bat` with every space and underscore removed, so `My Addon Project Source` becomes `MyAddonProjectSource`.
+
+Two settings sit at the top of `market.bat`: `NAMESPACE` (default `rl_yn`; `market.bat /NS:other_ns` overrides it for one run) and `OBFUSCATE` (`1` obfuscates the JSON as the release does, `0` leaves it readable).

@@ -126,10 +126,10 @@ REM  Destination profiles for SOURCE 1 (the child folder inside
 REM  FolderA, e.g. "bp"). Add more by adding BP_PROFILE_4_* lines
 REM  and raising BP_PROFILE_COUNT.
 REM ---------------------------------------------------------------
-REM Profile 4 ("release") is the scratch location release.bat builds into
-REM before it packs the .mcaddon. release.bat sets RELEASE_STAGE_DIR itself
-REM and deletes the folder afterwards; the fallback below only matters if
-REM you pick profile 4 by hand, so it never resolves to a drive root.
+REM Profile 4 ("release") is the scratch location release.bat and market.bat
+REM build into before they pack. Each sets RELEASE_STAGE_DIR itself and
+REM deletes the folder afterwards; the fallback below only matters if you
+REM pick profile 4 by hand, so it never resolves to a drive root.
 if not defined RELEASE_STAGE_DIR set "RELEASE_STAGE_DIR=%TEMP%\addon-release"
 
 set "BP_PROFILE_COUNT=4"
