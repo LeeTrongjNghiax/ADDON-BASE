@@ -6,7 +6,6 @@
     "dev": "batchs\\dev.bat",
     "output": "batchs\\output.bat",
     "build": "batchs\\build.bat",
-    "zip": "batchs\\zip.bat",
     "release": "batchs\\release.bat",
     "translate": "batchs\\translate-lang.bat",
     "bundle": "node ./sources/behavior_packs/bp/build.js",

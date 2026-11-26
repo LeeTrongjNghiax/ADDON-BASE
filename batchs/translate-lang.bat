@@ -5,7 +5,7 @@ REM =====================================================================
 REM  translate-lang.bat
 REM
 REM  Sits inside the "batchs" folder at the project root (same place as
-REM  build.bat / dev.bat / zip.bat). For each texts folder listed below
+REM  build.bat / dev.bat / release.bat). For each texts folder listed below
 REM  (bp\texts, rp\texts by default), it:
 REM
 REM    1. Duplicates the source .lang file (en_US.lang by default) into

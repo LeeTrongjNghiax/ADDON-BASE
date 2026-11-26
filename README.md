@@ -51,7 +51,6 @@ Then set the project defaults at the top of `batchs/build.bat`:
 | `npm run build`     | Bundles, then opens `build.bat` so you can pick profiles and a namespace.                                                                                  |
 | `npm run watch`     | Re-runs `npm run dev` when files under `bp` or `rp` change.                                                                                                |
 | `npm run translate` | Translates `en_US.lang` into the locale list and updates `languages.json`.                                                                                 |
-| `npm run zip`       | Zips a behavior pack and a resource pack into one archive. See [Zip](#zip).                                                                                |
 | `npm run release`   | Bundles the scripts, builds an obfuscated copy of both packs, and packs them into a versioned `.mcaddon` under `assets/version/`. See [Release](#release). |
 
 `npm run dev`, `npm run output`, and `npm run build` launch the batch files only. After you change TypeScript under `bp/sources/`, run `npm run bundle` before a deploy so `scripts/index.js` is current. `npm run watch` repeats `npm run dev` and does not bundle on its own.
@@ -127,12 +126,6 @@ Defaults in the batch file:
 `scripts/translate-lang.js` sends strings to Gemini (`gemini-2.5-flash`, 40 strings per request) using `GEMINI_API_KEY`. Minecraft formatting codes and `~LINEBREAK~` tokens stay in place. `en_GB` is copied from the source because the target language is English. Answering `Y` at the first prompt uses every default; otherwise each value can be overridden, and Enter keeps the value in brackets.
 
 Optional `.env` overrides: `GEMINI_MODEL`, `GEMINI_BATCH_SIZE`, `GEMINI_REQUEST_DELAY_MS` (default delay 4500 ms, to stay under free-tier rate limits).
-
-## Zip
-
-`batchs\zip.bat` stages a behavior pack and a resource pack with its own exclude lists, zips the contents of each (no wrapping `bp` or `rp` folder), and puts `bp.zip` and `rp.zip` inside one archive. Default destination is `C:\My Addon Project`, filename `My Addon Project.zip`.
-
-The default source paths are `behavior_packs\bp` and `resource_packs\rp` next to the batch file. This template keeps packs under `sources\`, so at the prompts set Folder A to `..\sources\behavior_packs` and Folder B to `..\sources\resource_packs`, or change `FOLDER_A_NAME_DEFAULT` and `FOLDER_B_NAME_DEFAULT` in `zip.bat`. The zip step does not rename the namespace or obfuscate JSON; run `output` when you want the processed packs, and zip that output if you need an archive of the shipped files.
 
 ## Release
 
