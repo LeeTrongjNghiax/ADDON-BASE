@@ -116,19 +116,36 @@ Add a name to those lists when a new tooling file should stay out of the shipped
 
 ## Translation
 
-`npm run translate` (or `batchs\translate-lang.bat`) reads `en_US.lang`, writes a `.lang` file for every target locale that does not have one yet, and rewrites `languages.json` in that texts folder so it lists every locale that has a file.
+`npm run translate` (or `batchs\translate-lang.bat`) reads `en_US.lang` in each texts folder and writes a `.lang` file for every other locale that folder's `languages.json` lists.
+
+### `languages.json` decides which locales
+
+Each texts folder's `languages.json` is the source of truth: a JSON array such as `["en_US", "de_DE", "vi_VN"]`. Translation only reads it and never rewrites it, so the behavior pack and the resource pack can ship different sets. Add or remove a locale by editing the list.
+
+For a new project, `npm run languages` writes a starting `languages.json` into both texts folders: the source locale, the default list (`en_GB de_DE es_ES es_MX fr_FR fr_CA it_IT ja_JP ko_KR pt_BR pt_PT ru_RU zh_CN zh_TW nl_NL bg_BG cs_CZ da_DK el_GR fi_FI hu_HU id_ID nb_NO pl_PL sk_SK sv_SE tr_TR uk_UA`), and any `.lang` files already in the folder. It never replaces a `languages.json` that exists; `npm run languages -- --force` does. A texts folder with no `languages.json` is reported as an error and skipped.
+
+A `.lang` file that exists but is not listed is ignored by the game, so translation warns about it.
+
+### Hand-written locales
+
+Put `# REGENERATE=0` on the **first line** of a `.lang` file and translation never touches it: no API call, no write. Use it for locales your team writes by hand, where the wording needs to be precise, local-friendly and culture-friendly.
+
+```
+# REGENERATE=0
+pack.name=§6Addon của tôi
+```
+
+Every other existing locale file (no marker, or `# REGENERATE=1`) is regenerated from `en_US.lang` on each run, so mark hand-written files before running `npm run translate`. The marker also works as `## regenerate = false`. It is read only from the first line, and a marker in `en_US.lang` is not copied into generated files. The sources are in git, so an unmarked file that gets regenerated can be restored from history.
+
+### Other settings
 
 Defaults in the batch file:
 
 - Source locale: `en_US`
 - Texts folders: `sources\behavior_packs\bp\texts` and `sources\resource_packs\rp\texts`, separated by `;` in `TEXTS_DIRS_DEFAULT`
-- Existing files: `OVERWRITE_EXISTING_DEFAULT=N`. A target `.lang` file that already has content is kept as it is, with no API call, so locales your team writes by hand (precise, local-friendly, culture-friendly wording) are never replaced by machine translation. Answer `Y` at the prompt, or set `OVERWRITE_EXISTING=1`, to regenerate every target file. The source `en_US.lang` is never changed.
 - Protected words, left in the source language: `RP` `BP`
-- Locales: `en_GB de_DE es_ES es_MX fr_FR fr_CA it_IT ja_JP ko_KR pt_BR pt_PT ru_RU zh_CN zh_TW nl_NL bg_BG cs_CZ da_DK el_GR fi_FI hu_HU id_ID nb_NO pl_PL sk_SK sv_SE tr_TR uk_UA`
 
 `scripts/translate-lang.js` sends strings to Gemini (`gemini-2.5-flash`, 40 strings per request) using `GEMINI_API_KEY`. Minecraft formatting codes and `~LINEBREAK~` tokens stay in place. `en_GB` is copied from the source because the target language is English. Answering `Y` at the first prompt uses every default; otherwise each value can be overridden, and Enter keeps the value in brackets.
-
-Because generated files count as existing files too, adding strings to `en_US.lang` does not update locales that were already generated: delete those `.lang` files (or answer `Y` to overwrite) to regenerate them.
 
 Optional `.env` overrides: `GEMINI_MODEL`, `GEMINI_BATCH_SIZE`, `GEMINI_REQUEST_DELAY_MS` (default delay 4500 ms, to stay under free-tier rate limits).
 

@@ -1,8 +1,8 @@
 // scripts/translate-lang.js
 //
-// Duplicates a source .lang file (default: en_US.lang) into every target
-// locale, machine-translates each value, and keeps the matching
-// languages.json in sync -- for one or more "texts" folders (bp, rp, ...).
+// Duplicates a source .lang file (default: en_US.lang) into every other
+// locale listed in that folder's languages.json and machine-translates
+// each value -- for one or more "texts" folders (bp, rp, ...).
 //
 // This is invoked by batchs\translate-lang.bat, which sets the
 // configuration below via environment variables. You can also run it
@@ -11,10 +11,28 @@
 //   set BASE_DIR=C:\path\to\project
 //   set TEXTS_DIRS=sources\behavior_packs\bp\texts;sources\resource_packs\rp\texts
 //   set SOURCE_LOCALE=en_US
-//   set TARGET_LOCALES=vi_VN de_DE ja_JP
 //   set PROTECTED_WORDS=RP BP
 //   set GEMINI_API_KEY=your-key-here
 //   node scripts/translate-lang.js
+//
+// WHICH LOCALES: languages.json IS THE SOURCE OF TRUTH ----------------
+// Each texts folder's languages.json decides which locales get a .lang
+// file generated, so every pack can ship a different set. This script
+// only READS it; it never rewrites it. Edit it by hand (a JSON array such
+// as ["en_US", "de_DE", "vi_VN"]), or create one for a new project with
+//
+//   node scripts/translate-lang.js --init-languages [--force]
+//
+// (npm run languages). That writes the default locale list below, plus
+// any .lang files already in the folder, and by default never replaces a
+// languages.json that exists; --force does.
+//
+// HAND-WRITTEN FILES: put   # REGENERATE=0   on the FIRST line of a locale
+// file and this script never touches it: no API call, no write. Use it
+// for locales the team writes by hand so the wording stays precise,
+// local-friendly and culture-friendly. Every other existing locale file
+// (no marker, or # REGENERATE=1) is regenerated from the source file.
+// The marker line is not copied from the source file into generated ones.
 //
 // Requires Node.js 18+ (uses the built-in global fetch).
 //
@@ -50,6 +68,8 @@ const DEFAULT_TEXTS_DIRS = [
   "sources/resource_packs/rp/texts",
 ];
 
+// Written into a new languages.json by --init-languages. Translation
+// itself only uses what each folder's languages.json lists.
 const DEFAULT_TARGET_LOCALES = [
   "en_GB",
   "de_DE",
@@ -91,13 +111,6 @@ const TEXTS_DIRS = (process.env.TEXTS_DIRS
 )
   .map((p) => p.trim())
   .filter(Boolean);
-
-const TARGET_LOCALES = (process.env.TARGET_LOCALES
-  ? process.env.TARGET_LOCALES.split(/\s+/)
-  : DEFAULT_TARGET_LOCALES
-)
-  .map((l) => l.trim())
-  .filter((l) => l && l !== SOURCE_LOCALE);
 
 const PROTECTED_WORDS = (process.env.PROTECTED_WORDS
   ? process.env.PROTECTED_WORDS.split(/\s+/)
@@ -309,6 +322,26 @@ function readLangFile(filePath) {
   return { lines, usesCRLF };
 }
 
+// "# REGENERATE=0" (also ## and spaces, and 0/false/no/off) on the first
+// line marks a hand-written file that must never be regenerated.
+const REGENERATE_LINE = /^\uFEFF?\s*#+\s*REGENERATE\s*=/i;
+const KEEP_VALUE = /^\uFEFF?\s*#+\s*REGENERATE\s*=\s*(0|false|no|off)\b/i;
+
+function isHandWritten(filePath) {
+  try {
+    const firstLine = fs.readFileSync(filePath, "utf8").split(/\r?\n/, 1)[0];
+    return KEEP_VALUE.test(firstLine);
+  } catch {
+    return false;
+  }
+}
+
+// The marker is about the file it is in, so it must not be duplicated
+// from the source file into every generated one.
+function withoutMarkerLine(lines) {
+  return lines.length > 0 && REGENERATE_LINE.test(lines[0]) ? lines.slice(1) : lines;
+}
+
 function writeLangFile(filePath, lines, usesCRLF) {
   const eol = usesCRLF ? "\r\n" : "\n";
   fs.writeFileSync(filePath, lines.join(eol), "utf8");
@@ -373,29 +406,71 @@ async function translateLocaleFile(parsedLines, langName, protectedPattern, cach
 }
 
 // ------------------------------------------------------------------
-// languages.json
+// languages.json -- the source of truth for which locales to generate
 // ------------------------------------------------------------------
 
-function updateLanguagesJson(dirAbs, sourceLocale, targetLocales) {
+// Reads <dir>/languages.json. Returns { locales } or { error }.
+function readLanguagesJson(dirAbs) {
   const jsonPath = path.join(dirAbs, "languages.json");
-  let locales = [sourceLocale];
+  if (!fs.existsSync(jsonPath)) {
+    return {
+      error:
+        `${jsonPath} not found. It lists the locales to generate. Create it with ` +
+        `"npm run languages", or write it by hand, e.g. ["${SOURCE_LOCALE}", "de_DE", "vi_VN"].`,
+    };
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(fs.readFileSync(jsonPath, "utf8").replace(/^\uFEFF/, ""));
+  } catch (err) {
+    return { error: `Could not parse ${jsonPath}: ${err.message}` };
+  }
+  if (!Array.isArray(parsed) || !parsed.every((l) => typeof l === "string")) {
+    return { error: `${jsonPath} must be a JSON array of locale codes, e.g. ["${SOURCE_LOCALE}", "de_DE"].` };
+  }
+  return { locales: [...new Set(parsed.map((l) => l.trim()).filter(Boolean))] };
+}
 
-  if (fs.existsSync(jsonPath)) {
-    try {
-      const existing = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-      if (Array.isArray(existing)) locales = existing;
-    } catch {
-      console.warn(`  ! Could not parse existing ${jsonPath}, recreating it.`);
+function langFilesIn(dirAbs) {
+  return fs
+    .readdirSync(dirAbs)
+    .filter((f) => /\.lang$/i.test(f))
+    .map((f) => f.slice(0, -".lang".length))
+    .sort();
+}
+
+// --init-languages: write a starting languages.json into each texts
+// folder. Never replaces an existing one unless --force is given.
+function initLanguages(force) {
+  console.log("============================================================");
+  console.log(" Creating languages.json");
+  console.log("============================================================");
+
+  let hadError = false;
+  for (const relDir of TEXTS_DIRS) {
+    const dirAbs = path.resolve(BASE_DIR, relDir);
+    const jsonPath = path.join(dirAbs, "languages.json");
+
+    if (!fs.existsSync(dirAbs)) {
+      console.error(`  ! Texts folder not found, skipping: ${dirAbs}`);
+      hadError = true;
+      continue;
     }
-  }
+    if (fs.existsSync(jsonPath) && !force) {
+      console.log(`  Kept existing ${jsonPath} (use --force to replace it)`);
+      continue;
+    }
 
-  for (const locale of [sourceLocale, ...targetLocales]) {
-    if (!locales.includes(locale)) locales.push(locale);
+    // Source locale, then the default list, then any other .lang already
+    // in the folder (for example hand-written locales).
+    const locales = [SOURCE_LOCALE];
+    for (const l of [...DEFAULT_TARGET_LOCALES, ...langFilesIn(dirAbs)]) {
+      if (!locales.includes(l)) locales.push(l);
+    }
+    fs.writeFileSync(jsonPath, `[${locales.map((l) => `"${l}"`).join(", ")}]`, "utf8");
+    console.log(`  Wrote ${jsonPath} (${locales.length} locales)`);
   }
-
-  const formatted = `[${locales.map((l) => `"${l}"`).join(", ")}]`;
-  fs.writeFileSync(jsonPath, formatted, "utf8");
-  console.log(`  Updated ${jsonPath}`);
+  process.exit(hadError ? 1 : 0);
 }
 
 // ------------------------------------------------------------------
@@ -407,8 +482,9 @@ async function main() {
   console.log(" Translating .lang files (backend: Gemini API)");
   console.log("============================================================");
   console.log(`Source locale : ${SOURCE_LOCALE}`);
-  console.log(`Target locales: ${TARGET_LOCALES.join(", ")}`);
+  console.log("Locales       : from each folder's languages.json");
   console.log(`Protected     : ${PROTECTED_WORDS.join(", ")}`);
+  console.log("Hand-written  : files starting with '# REGENERATE=0' are never touched");
   console.log(`Gemini model  : ${GEMINI_MODEL}`);
   console.log("");
 
@@ -440,13 +516,41 @@ async function main() {
       continue;
     }
 
-    const { lines, usesCRLF } = readLangFile(sourceFile);
+    const { locales, error } = readLanguagesJson(dirAbs);
+    if (error) {
+      console.error(`  ! ${error}`);
+      hadError = true;
+      continue;
+    }
+    if (!locales.includes(SOURCE_LOCALE)) {
+      console.warn(`  ! languages.json does not list ${SOURCE_LOCALE}; add it so the game offers that language.`);
+    }
+    const targets = locales.filter((l) => l !== SOURCE_LOCALE);
+
+    const unlisted = langFilesIn(dirAbs).filter((l) => l !== SOURCE_LOCALE && !locales.includes(l));
+    if (unlisted.length > 0) {
+      console.warn(`  ! Not listed in languages.json, so the game ignores them: ${unlisted.join(", ")}`);
+    }
+
+    const { lines: sourceLines, usesCRLF } = readLangFile(sourceFile);
+    const lines = withoutMarkerLine(sourceLines);
     const parsedLines = parseLines(lines, protectedPattern);
 
-    for (const locale of TARGET_LOCALES) {
-      const targetFile = path.join(dirAbs, `${locale}.lang`);
-      const langName = LOCALE_TO_LANG[locale];
+    let written = 0;
+    let replaced = 0;
+    let kept = 0;
 
+    for (const locale of targets) {
+      const targetFile = path.join(dirAbs, `${locale}.lang`);
+      const existed = fs.existsSync(targetFile);
+
+      if (existed && isHandWritten(targetFile)) {
+        console.log(`  ${locale}: kept (hand-written, # REGENERATE=0)`);
+        kept++;
+        continue;
+      }
+
+      const langName = LOCALE_TO_LANG[locale];
       if (!langName) {
         console.warn(`  ! No language mapping for locale "${locale}", skipping.`);
         continue;
@@ -469,10 +573,16 @@ async function main() {
       }
 
       writeLangFile(targetFile, translatedLines, usesCRLF);
-      console.log(`  Wrote ${locale}.lang`);
+      if (existed) {
+        console.log(`  Replaced existing ${locale}.lang (no # REGENERATE=0 on its first line)`);
+        replaced++;
+      } else {
+        console.log(`  Wrote ${locale}.lang`);
+        written++;
+      }
     }
 
-    updateLanguagesJson(dirAbs, SOURCE_LOCALE, TARGET_LOCALES);
+    console.log(`  ${written} new, ${replaced} regenerated, ${kept} kept (hand-written).`);
     console.log("");
   }
 
@@ -483,7 +593,12 @@ async function main() {
   process.exit(hadError ? 1 : 0);
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
+const cliArgs = process.argv.slice(2);
+if (cliArgs.includes("--init-languages")) {
+  initLanguages(cliArgs.includes("--force"));
+} else {
+  main().catch((err) => {
+    console.error("Fatal error:", err);
+    process.exit(1);
+  });
+}

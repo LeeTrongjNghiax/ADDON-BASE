@@ -8,12 +8,20 @@ REM  Sits inside the "batchs" folder at the project root (same place as
 REM  build.bat / dev.bat / release.bat). For each texts folder listed below
 REM  (bp\texts, rp\texts by default), it:
 REM
-REM    1. Duplicates the source .lang file (en_US.lang by default) into
-REM       every target locale in the list.
-REM    2. Machine-translates each duplicated file's values, leaving
+REM    1. Reads that folder's languages.json. It is the SOURCE OF TRUTH
+REM       for which locales the pack ships, and this script never
+REM       modifies it. Edit it by hand, or create one for a new project
+REM       with:  npm run languages
+REM    2. Duplicates the source .lang file (en_US.lang by default) into
+REM       every other locale listed there.
+REM    3. Machine-translates each duplicated file's values, leaving
 REM       Minecraft formatting codes (section-sign codes), ~LINEBREAK~
 REM       tokens, and any "protected words" (e.g. RP / BP) untouched.
-REM    3. Updates that folder's languages.json to include every locale.
+REM
+REM  Hand-written locales: put   # REGENERATE=0   on the FIRST line of a
+REM  .lang file and it is never touched (no API call, no write). Every
+REM  other existing locale file is regenerated, so mark the ones your
+REM  team writes by hand before running this.
 REM
 REM  The actual work is done by scripts\translate-lang.js (Node.js).
 REM  Requires Node.js 18+, an internet connection, and a Gemini API key
@@ -39,15 +47,14 @@ REM =====================================================================
 REM ======================= DEFAULTS =======================
 set "SOURCE_LOCALE_DEFAULT=en_US"
 
-REM Semicolon-separated, relative to the project root.
-REM "TEXTS_DIRS_DEFAULT=sources\behavior_packs\bp\texts;sources\resource_packs\rp\texts"
-set "TEXTS_DIRS_DEFAULT=sources\resource_packs\rp\texts"
+REM Semicolon-separated, relative to the project root. Both packs by
+REM default: the behavior pack's pack name/description need translating
+REM too.
+set "TEXTS_DIRS_DEFAULT=sources\behavior_packs\bp\texts;sources\resource_packs\rp\texts"
 
 REM Space-separated whole words that must NEVER be translated.
 set "PROTECTED_WORDS_DEFAULT=RP BP"
 
-REM Space-separated. This is the full locale list the project ships with.
-set "TARGET_LOCALES_DEFAULT=en_GB de_DE es_ES es_MX fr_FR fr_CA it_IT ja_JP ko_KR pt_BR pt_PT ru_RU zh_CN zh_TW nl_NL bg_BG cs_CZ da_DK el_GR fi_FI hu_HU id_ID nb_NO pl_PL sk_SK sv_SE tr_TR uk_UA"
 REM ==========================================================
 
 echo ============================================================
@@ -77,14 +84,13 @@ if /I not "%AUTO_MODE%"=="Y" set /p "TEXTS_DIRS=Texts folders, semicolon-separat
 set "PROTECTED_WORDS=%PROTECTED_WORDS_DEFAULT%"
 if /I not "%AUTO_MODE%"=="Y" set /p "PROTECTED_WORDS=Words to always leave untranslated, space-separated [%PROTECTED_WORDS%]: "
 
-set "TARGET_LOCALES=%TARGET_LOCALES_DEFAULT%"
-if /I not "%AUTO_MODE%"=="Y" set /p "TARGET_LOCALES=Target locales to generate, space-separated [%TARGET_LOCALES%]: "
 echo.
 
 echo   Source locale   : %SOURCE_LOCALE%
 echo   Texts folders    : %TEXTS_DIRS%
 echo   Protected words  : %PROTECTED_WORDS%
-echo   Target locales   : %TARGET_LOCALES%
+echo   Target locales   : from each folder's languages.json
+echo   Hand-written     : files starting with "# REGENERATE=0" are skipped
 echo.
 
 REM BASE_DIR = the project root, i.e. one level up from this script's
